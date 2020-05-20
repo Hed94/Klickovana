@@ -1,5 +1,7 @@
 # Klickovana
 Primitivní webohá hra napsaná v JavaScriptu.
+Dostupná online na adrese.
+http://hed94.eu/
 
 Cílem hry je co nejdéle utíkat se svým žlutým čtvercem uprostřed ostatním červeným objektům.
 Můj osobní rekord je 28 sekund.
