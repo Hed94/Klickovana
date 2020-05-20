@@ -1,0 +1,227 @@
+<!DOCTYPE HTML>
+<html lang="cs">
+  <head>
+  <link rel="stylesheet" type="text/css" href="styl.css" media="screen"/>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+  <title>Run Square Run</title>   
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+  </head>
+  <body>
+  <h1>Vítejte</h1> 
+  <div class="wrapper">
+  <div class="info">
+  <h2>O hře</h2>
+  <h3>Ovládání</h3>
+  <div>Klávesy W,A,S,D nebo šipkami ovládáte svůj malý žlutý čtvereček.</div>
+  <h3>Start hry</h3>
+  <div>Klávesou entr</div>
+  <h3>Cíl hry</h3>
+  <div>Vyhýbat se co nejdéle červeným nepřátelům.</div>
+  <h3>Poznámka</h3>
+   <p>Rekord autora: 28 sekund</p>
+  </div>
+  <div class="platno">
+    <svg>
+    <rect id="had" width ="0" height="0"/>
+    <rect id="cerv1" class="cerv" width ="0" height="0"/>
+    <rect id="cerv2" class="cerv" width ="0" height="0"/>
+    <rect id="cerv3" class="cerv" width ="0" height="0"/>
+    <rect id="cerv4" class="cerv" width ="0" height="0"/>
+    </svg>
+   </div> 
+   <div class="info" >
+   <h2>Nejlepší pokus</h2>
+   <div id="Vysledky">
+   <script>
+	  document.getElementById("Vysledky").innerHTML += localStorage.getItem("cas") +" sekund";
+    </script>
+   </div>
+   </div>
+   </div>  
+<script>
+
+// Definice hry
+var keyState = {};
+var platnoDelka = 700;
+var platnoVyska = 600;
+var cas = 0;
+// Definice hráče
+var x = 330;
+var y = 280;
+var rychlost = 5;
+var velikosthrace = 50;
+// Definice nepřátel
+var velikostX = [50,80,80,130];
+var velikostY = [50,20,110,80];
+var souradniceX = [100,500,100,400];
+var souradniceY = [100,150,400,450];
+var smerX = [1,-1,1,-1];
+var smerY = [1,1,-1,-1];
+var rychlostEnemy = 5;
+var konecHry = true;
+
+// Přiřazení atributů hry
+// Plátno
+$("svg").attr("width",platnoDelka);
+$("svg").attr("height",platnoVyska);
+// Hráč
+$("#had").attr("x",x);
+$("#had").attr("y",y);
+// Nepřítel 1
+$("#cerv1").attr("x",souradniceX[0]);
+$("#cerv1").attr("y",souradniceY[0]);
+$("#cerv1").attr("width",velikostX[0]);
+$("#cerv1").attr("height",velikostY[0]);
+// Nepřítel 2
+$("#cerv2").attr("x",souradniceX[1]);
+$("#cerv2").attr("y",souradniceY[1]);
+$("#cerv2").attr("width",velikostX[1]);
+$("#cerv2").attr("height",velikostY[1]);
+// Nepřítel 3
+$("#cerv3").attr("x",souradniceX[2]);
+$("#cerv3").attr("y",souradniceY[2]);
+$("#cerv3").attr("width",velikostX[2]);
+$("#cerv3").attr("height",velikostY[2]);
+// Nepřítel 4
+$("#cerv4").attr("x",souradniceX[3]);
+$("#cerv4").attr("y",souradniceY[3]);
+$("#cerv4").attr("width",velikostX[3]);
+$("#cerv4").attr("height",velikostY[3]);
+
+
+// Poslouchání hráčovy klávesnice
+window.addEventListener('keydown',function(e){
+    keyState[e.keyCode || e.which] = true;
+},true);
+
+window.addEventListener('keyup',function(e){
+    keyState[e.keyCode || e.which] = false;
+},true);
+
+// Herní loop pro hráče
+// V metodě je řešen začátek hry a hlavně hráčův pohyb
+function gameLoop() {
+// If čeká až hráč stiskne entr na začátek hry
+if (keyState[13]){
+    konecHry = false;
+} 
+// Kontrola že hra začala, poté pohyb hráče podle kláves
+if(!konecHry)
+  { 
+      if (keyState[37] || keyState[65]){
+        if(x > 0)
+        { 
+          x -= rychlost;
+        }
+      }
+  
+      if (keyState[39] || keyState[68]){
+        if(x < platnoDelka - velikosthrace)
+        {
+          x += rychlost;
+        }
+      }
+      
+      if (keyState[40] || keyState[83]){
+        if(y < platnoVyska - velikosthrace)
+        {
+          y += rychlost;
+        }
+      }
+      
+      if (keyState[38] || keyState[87]){
+        if(y > 0)
+        {
+          y -= rychlost;
+        }  
+      }
+      document.getElementById("had").setAttribute("x",x);
+      document.getElementById("had").setAttribute("y",y);
+  }
+  // Volání sebe sama
+  setTimeout(gameLoop, 10);
+}
+// Metoda pro pohyb nepřátel a zrychlení všech entit na plátně a detekci kolize
+function enemy() {
+// If kontroluje konec hry a poté for cyklem projede všechny 4 nepřátele
+if(!konecHry)
+  { 
+    // For cyklus projíždí 4x - pro všechny 4 nepřátele
+    // V rámci for cyklu se vždy kontroluje že nepřítel nevyšel z plátna
+    // Pokuď ano tak se odrazí
+    for (i = 0; i < 4; i++)
+    {
+      // Jako první se kontroluje zda nepřítel nekoliduje s hráčem
+      // If počítá s různou délkou nepřátel
+      if (souradniceX[i] < x + velikosthrace &&
+       souradniceX[i] + velikostX[i] > x &&
+       souradniceY[i] < y + velikosthrace &&
+       souradniceY[i] + velikostY[i] > y) 
+       {
+        // Pokuď kolize nastala tak se ukončí hra a vypíše hláška
+        if(!konecHry)
+        {
+          konecHry = true;
+          // Pokuď je nový čas větší tak se zapíše
+          if(localStorage.getItem("cas") < cas)
+          {
+              localStorage.setItem("cas", cas);
+          }
+          alert("Vydržel jsi "+cas+" sekund!");
+          location.reload();
+        }
+       }
+      if(souradniceX[i] < 0)
+      {
+        smerX[i] *= -1;
+      }
+      
+      if(souradniceY[i] < 0)
+      {
+        smerY[i] *= -1;
+      }
+      
+      if(souradniceX[i] > (platnoDelka - velikostX[i]))
+      {
+        smerX[i] *= -1;
+      }
+      
+      if(souradniceY[i] > (platnoVyska - velikostY[i]))
+      {
+        smerY[i] *= -1;
+      }
+      // Po kontrole hranic plátna se nepřítel posune
+      // Výpočet pohybu + jejich zrychlení pomocí uběhnutého času  
+      souradniceX[i] = souradniceX[i] + (smerX[i]*(rychlostEnemy + cas));
+      souradniceY[i] = souradniceY[i] + (smerY[i]*(rychlostEnemy + cas));
+      // Samotná změna umístění nepřítele na stránce
+      document.getElementById("cerv"+(i+1)).setAttribute("x",souradniceX[i]);
+      document.getElementById("cerv"+(i+1)).setAttribute("y",souradniceY[i]);
+    }
+  }
+  // Zrychlení hráče stejným způsobem
+  // Rychlost hráče však nesmí přesáhnout 10
+  if(rychlost < 10)
+  {
+    rychlost = rychlost + ( cas * 0.001);
+  } 
+}
+
+// Funkce obstarává časomíru přidává do proměné 1
+// Funkce je dole volaná jednou za 1000ms => 1 sekundu
+function casomira()
+{
+  if(!konecHry)
+  {
+    cas = cas+1;
+  }
+}
+
+setInterval(enemy, 50);
+setInterval(casomira, 1000);
+gameLoop();
+
+  </script>    
+       
+  </body>
+</html>
